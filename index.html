@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!-- saved from url=(0117)file:///Users/max/Documents/Codex/2026-06-16/files-mentioned-by-the-user-doctype/outputs/hydromorphon-rechner-v5.html -->
+<html lang="de"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Hydromorphon-Rechner nach Jeleazcov – v5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{--border:#cfd6df;--bg:#f7f9fb;--text:#1f2933;--muted:#52606d;--accent:#0b5cad}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text);margin:0;background:#fff}
+header{background:var(--bg);border-bottom:1px solid var(--border);padding:24px 32px}
+main{max-width:1120px;margin:0 auto;padding:24px 32px 48px}
+h1{margin:0 0 8px;font-size:28px} h2{margin-top:32px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{border:1px solid var(--border);border-radius:10px;padding:16px;background:#fff}
+label{display:block;font-weight:600;margin-bottom:6px}
+input,select{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:7px;font-size:16px}
+button{background:var(--accent);color:white;border:0;padding:12px 18px;border-radius:8px;font-size:16px;cursor:pointer;margin-top:12px;margin-right:8px}
+button.secondary{background:#52606d}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:18px}
+.result{border:1px solid var(--border);border-radius:10px;padding:16px;background:#f9fbfd}
+.big{font-size:28px;font-weight:700;color:#0b5cad;margin:6px 0}
+.muted{color:var(--muted);font-size:14px}
+.chart-wrap{border:1px solid var(--border);border-radius:8px;background:#fff;margin-top:12px;padding:12px;overflow-x:auto}
+.chart{display:block;width:100%;min-width:640px;height:auto}
+.chart text{font-size:12px;fill:var(--muted)}
+.chart .axis{stroke:#8a97a6;stroke-width:1}
+.chart .gridline{stroke:#e5e9ef;stroke-width:1}
+.chart .cp-line{fill:none;stroke:#c62828;stroke-width:2.5}
+.chart .ce-line{fill:none;stroke:#1565c0;stroke-width:2.5}
+.chart .legend-cp{fill:#c62828}
+.chart .legend-ce{fill:#1565c0}
+.chart .axis-cp{fill:#c62828}
+.chart .axis-ce{fill:#1565c0}
+table{border-collapse:collapse;width:100%;margin-top:12px;font-size:14px}
+th,td{border:1px solid var(--border);padding:8px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left} th{background:var(--bg)}
+.small{font-size:13px;color:var(--muted);line-height:1.45}
+@media print{header,button,.no-print,h2.model{display:none}main{padding:0;max-width:none}body{font-size:11px}table{font-size:10px}th,td{padding:4px}}
+</style>
+</head>
+<body>
+<header>
+<h1>Hydromorphon-Rechner gemäß PK Modell von Jeleazcov et al.</h1>
+<div class="muted">Für die Berechnung des initialen Hydromorphon-Bolus und der Perfusorlaufrate für die gewünschte Effektortkonzentration.</div>
+</header>
+<main>
+
+<h2>Eingabe</h2>
+<div class="grid">
+<div class="card"><label for="weight">Körpergewicht [kg]</label><input id="weight" type="number" min="30" max="180" step="1" value="80"></div>
+<div class="card"><label for="age">Alter [Jahre]</label><input id="age" type="number" min="18" max="100" step="1" value="67"></div>
+<div class="card"><label for="target">Ziel-Ce (ng/ml)</label><select id="target">
+<option value="2.0">2,0 ng/ml</option><option value="2.5">2,5 ng/ml</option><option value="3.0" selected="">3,0 ng/ml</option><option value="3.5">3,5 ng/ml</option><option value="4.0">4,0 ng/ml</option>
+</select><div class="small">Pragmatische Empfehlung: vulnerabel oder Fentanyl-Restwirkung erwartet: 2,0–2,5; nur Remifentanil intraop.: 3,0–4,0.</div></div>
+<div class="card"><label for="concentration">Perfusorkonzentration [mg/ml]</label><input id="concentration" type="number" min="0.001" step="0.001" value="0.04"><div class="small">Standard: 2 mg / 50 ml = 0,04 mg/ml</div></div>
+</div>
+
+<button onclick="calculate()">Berechnen</button>
+<button class="secondary" onclick="window.print()">Drucken / PDF</button>
+
+<h2>Ergebnis</h2>
+<div class="results">
+<div class="result"><div class="muted">Initialbolus</div><div class="big" id="bolusMl">17,8 ml</div><div class="muted">über 1 min geben</div><div class="muted" id="bolusMg">0,713 mg Hydromorphon</div></div>
+<div class="result"><div class="muted">Perfusor-Laufrate</div><div class="big" id="rateMlH">5,2 ml/h</div><div class="muted">direkt mit Bolusstart beginnen</div><div class="muted" id="rateMgH">0,208 mg/h</div></div>
+</div>
+
+<h2>Modellparameter für aktuelle Eingabe</h2>
+<div class="small">Berechnet aus Körpergewicht und Alter. Clearances werden primär in L/min angezeigt; L/h steht zusätzlich in Klammer. Volumina in L.</div>
+<table id="paramTable">
+<thead><tr><th>Parameter</th><th>Wert</th><th>Einheit</th><th>Formel</th></tr></thead>
+<tbody><tr><td>CL1</td><td>1,154 (69,26 L/h)</td><td>L/min</td><td style="text-align:left">1,01 × (BW/70) × (1 − 0,015 × (Alter − 67))</td></tr><tr><td>CL2</td><td>1,680 (100,80 L/h)</td><td>L/min</td><td style="text-align:left">1,47 × (BW/70)</td></tr><tr><td>CL3</td><td>1,611 (96,69 L/h)</td><td>L/min</td><td style="text-align:left">1,41 × (BW/70)</td></tr><tr><td>V1</td><td>3,83</td><td>L</td><td style="text-align:left">3,35 × (BW/70) × (1 − 0,028 × (Alter − 67))</td></tr><tr><td>V2</td><td>15,89</td><td>L</td><td style="text-align:left">13,9 × (BW/70)</td></tr><tr><td>V3</td><td>165,7</td><td>L</td><td style="text-align:left">145 × (BW/70)</td></tr><tr><td>ke0</td><td>0,015</td><td>min⁻¹</td><td style="text-align:left">0,015</td></tr></tbody>
+</table>
+
+<h2>Simulationsverlauf</h2>
+<div class="chart-wrap" id="profileChart"><svg class="chart" viewBox="0 0 920 360" role="img" aria-label="Konzentrationsverlauf von Cp und Ce">
+  <rect x="0" y="0" width="920" height="360" fill="#fff"></rect>
+  <line class="gridline" x1="58" y1="314" x2="862" y2="314"></line>
+  <text class="axis-cp" x="50" y="318" text-anchor="end">0</text>
+  <text class="axis-ce" x="870" y="318" text-anchor="start">0,0</text><line class="gridline" x1="58" y1="242.5" x2="862" y2="242.5"></line>
+  <text class="axis-cp" x="50" y="246.5" text-anchor="end">30</text>
+  <text class="axis-ce" x="870" y="246.5" text-anchor="start">1,0</text><line class="gridline" x1="58" y1="171" x2="862" y2="171"></line>
+  <text class="axis-cp" x="50" y="175" text-anchor="end">60</text>
+  <text class="axis-ce" x="870" y="175" text-anchor="start">2,0</text><line class="gridline" x1="58" y1="99.5" x2="862" y2="99.5"></line>
+  <text class="axis-cp" x="50" y="103.5" text-anchor="end">90</text>
+  <text class="axis-ce" x="870" y="103.5" text-anchor="start">3,0</text><line class="gridline" x1="58" y1="28" x2="862" y2="28"></line>
+  <text class="axis-cp" x="50" y="32" text-anchor="end">120</text>
+  <text class="axis-ce" x="870" y="32" text-anchor="start">4,0</text><line class="gridline" x1="58" y1="28" x2="58" y2="314"></line><text x="58" y="342" text-anchor="middle">0</text><line class="gridline" x1="158.5" y1="28" x2="158.5" y2="314"></line><text x="158.5" y="342" text-anchor="middle">30</text><line class="gridline" x1="259" y1="28" x2="259" y2="314"></line><text x="259" y="342" text-anchor="middle">60</text><line class="gridline" x1="359.5" y1="28" x2="359.5" y2="314"></line><text x="359.5" y="342" text-anchor="middle">90</text><line class="gridline" x1="460" y1="28" x2="460" y2="314"></line><text x="460" y="342" text-anchor="middle">120</text><line class="gridline" x1="661" y1="28" x2="661" y2="314"></line><text x="661" y="342" text-anchor="middle">180</text><line class="gridline" x1="862" y1="28" x2="862" y2="314"></line><text x="862" y="342" text-anchor="middle">240</text>
+  <line class="axis" x1="58" y1="28" x2="58" y2="314"></line>
+  <line class="axis" x1="862" y1="28" x2="862" y2="314"></line>
+  <line class="axis" x1="58" y1="314" x2="862" y2="314"></line>
+  <polyline class="cp-line" points="58.0,314.0 61.4,48.1 64.7,222.0 68.0,274.6 71.4,290.8 74.8,296.1 78.1,298.1 81.5,299.0 84.8,299.7 88.2,300.3 91.5,300.7 94.8,301.2 98.2,301.6 101.6,302.0 104.9,302.3 108.3,302.7 111.6,303.0 114.9,303.3 118.3,303.6 121.7,303.8 125.0,304.1 128.3,304.3 131.7,304.5 135.1,304.7 138.4,304.9 141.8,305.1 145.1,305.2 148.4,305.4 151.8,305.5 155.2,305.6 158.5,305.8 161.9,305.9 165.2,306.0 168.6,306.1 171.9,306.2 175.3,306.3 178.6,306.4 181.9,306.4 185.3,306.5 188.7,306.6 192.0,306.6 195.3,306.7 198.7,306.7 202.1,306.8 205.4,306.8 208.8,306.9 212.1,306.9 215.4,307.0 218.8,307.0 222.2,307.0 225.5,307.1 228.8,307.1 232.2,307.1 235.5,307.2 238.9,307.2 242.3,307.2 245.6,307.2 248.9,307.2 252.3,307.3 255.6,307.3 259.0,307.3 262.4,307.3 265.7,307.3 269.1,307.3 272.4,307.3 275.8,307.3 279.1,307.4 282.5,307.4 285.8,307.4 289.1,307.4 292.5,307.4 295.9,307.4 299.2,307.4 302.5,307.4 305.9,307.4 309.3,307.4 312.6,307.4 316.0,307.4 319.3,307.4 322.6,307.4 326.0,307.4 329.4,307.4 332.7,307.4 336.1,307.4 339.4,307.4 342.8,307.4 346.1,307.4 349.4,307.4 352.8,307.4 356.2,307.4 359.5,307.4 362.8,307.4 366.2,307.4 369.6,307.4 372.9,307.4 376.3,307.4 379.6,307.4 382.9,307.4 386.3,307.4 389.6,307.4 393.0,307.4 396.4,307.4 399.7,307.4 403.0,307.4 406.4,307.4 409.8,307.4 413.1,307.4 416.5,307.4 419.8,307.4 423.1,307.4 426.5,307.4 429.9,307.4 433.2,307.4 436.6,307.4 439.9,307.4 443.3,307.4 446.6,307.4 449.9,307.4 453.3,307.4 456.7,307.4 460.0,307.4 463.3,307.4 466.7,307.4 470.0,307.4 473.4,307.4 476.8,307.4 480.1,307.4 483.4,307.4 486.8,307.4 490.1,307.4 493.5,307.4 496.8,307.4 500.2,307.4 503.6,307.4 506.9,307.4 510.3,307.4 513.6,307.4 517.0,307.4 520.3,307.4 523.7,307.4 527.0,307.4 530.4,307.4 533.7,307.3 537.0,307.3 540.4,307.3 543.8,307.3 547.1,307.3 550.5,307.3 553.8,307.3 557.2,307.3 560.5,307.3 563.8,307.3 567.2,307.3 570.5,307.3 573.9,307.3 577.3,307.3 580.6,307.3 584.0,307.3 587.3,307.3 590.6,307.3 594.0,307.3 597.3,307.3 600.7,307.3 604.1,307.3 607.4,307.3 610.8,307.3 614.1,307.3 617.4,307.3 620.8,307.3 624.2,307.3 627.5,307.3 630.9,307.3 634.2,307.3 637.5,307.3 640.9,307.3 644.3,307.3 647.6,307.3 651.0,307.3 654.3,307.3 657.6,307.3 661.0,307.3 664.4,307.3 667.7,307.3 671.0,307.3 674.4,307.3 677.8,307.3 681.1,307.3 684.5,307.3 687.8,307.3 691.1,307.3 694.5,307.3 697.8,307.3 701.2,307.3 704.6,307.3 707.9,307.3 711.3,307.3 714.6,307.3 717.9,307.3 721.3,307.3 724.7,307.3 728.0,307.2 731.4,307.2 734.7,307.2 738.0,307.2 741.4,307.2 744.8,307.2 748.1,307.2 751.5,307.2 754.8,307.2 758.1,307.2 761.5,307.2 764.9,307.2 768.2,307.2 771.5,307.2 774.9,307.2 778.3,307.2 781.6,307.2 785.0,307.2 788.3,307.2 791.6,307.2 795.0,307.2 798.3,307.2 801.7,307.2 805.1,307.2 808.4,307.2 811.8,307.2 815.1,307.2 818.4,307.2 821.8,307.2 825.2,307.2 828.5,307.2 831.9,307.2 835.2,307.2 838.5,307.2 841.9,307.2 845.3,307.2 848.6,307.2 852.0,307.2 855.3,307.2 858.6,307.2 862.0,307.2"></polyline>
+  <polyline class="ce-line" points="58.0,314.0 61.4,243.5 64.7,172.4 68.0,147.4 71.4,136.6 74.8,130.3 78.1,125.5 81.5,121.4 84.8,117.8 88.2,114.4 91.5,111.4 94.8,108.6 98.2,106.0 101.6,103.6 104.9,101.5 108.3,99.5 111.6,97.7 114.9,96.1 118.3,94.6 121.7,93.3 125.0,92.1 128.3,91.0 131.7,90.0 135.1,89.1 138.4,88.4 141.8,87.7 145.1,87.1 148.4,86.6 151.8,86.2 155.2,85.8 158.5,85.5 161.9,85.2 165.2,85.1 168.6,84.9 171.9,84.8 175.3,84.7 178.6,84.7 181.9,84.7 185.3,84.8 188.7,84.9 192.0,85.0 195.3,85.1 198.7,85.3 202.1,85.5 205.4,85.6 208.8,85.9 212.1,86.1 215.4,86.3 218.8,86.6 222.2,86.9 225.5,87.1 228.8,87.4 232.2,87.7 235.5,88.0 238.9,88.3 242.3,88.7 245.6,89.0 248.9,89.3 252.3,89.6 255.6,90.0 259.0,90.3 262.4,90.6 265.7,91.0 269.1,91.3 272.4,91.6 275.8,92.0 279.1,92.3 282.5,92.6 285.8,93.0 289.1,93.3 292.5,93.6 295.9,93.9 299.2,94.3 302.5,94.6 305.9,94.9 309.3,95.2 312.6,95.5 316.0,95.8 319.3,96.1 322.6,96.4 326.0,96.7 329.4,97.0 332.7,97.3 336.1,97.6 339.4,97.9 342.8,98.2 346.1,98.5 349.4,98.7 352.8,99.0 356.2,99.3 359.5,99.5 362.8,99.8 366.2,100.0 369.6,100.3 372.9,100.5 376.3,100.8 379.6,101.0 382.9,101.3 386.3,101.5 389.6,101.7 393.0,101.9 396.4,102.1 399.7,102.4 403.0,102.6 406.4,102.8 409.8,103.0 413.1,103.2 416.5,103.4 419.8,103.6 423.1,103.8 426.5,103.9 429.9,104.1 433.2,104.3 436.6,104.5 439.9,104.7 443.3,104.8 446.6,105.0 449.9,105.2 453.3,105.3 456.7,105.5 460.0,105.6 463.3,105.8 466.7,105.9 470.0,106.1 473.4,106.2 476.8,106.3 480.1,106.5 483.4,106.6 486.8,106.7 490.1,106.9 493.5,107.0 496.8,107.1 500.2,107.2 503.6,107.3 506.9,107.5 510.3,107.6 513.6,107.7 517.0,107.8 520.3,107.9 523.7,108.0 527.0,108.1 530.4,108.2 533.7,108.3 537.0,108.4 540.4,108.5 543.8,108.5 547.1,108.6 550.5,108.7 553.8,108.8 557.2,108.9 560.5,108.9 563.8,109.0 567.2,109.1 570.5,109.2 573.9,109.2 577.3,109.3 580.6,109.4 584.0,109.4 587.3,109.5 590.6,109.6 594.0,109.6 597.3,109.7 600.7,109.7 604.1,109.8 607.4,109.8 610.8,109.9 614.1,109.9 617.4,110.0 620.8,110.0 624.2,110.1 627.5,110.1 630.9,110.2 634.2,110.2 637.5,110.2 640.9,110.3 644.3,110.3 647.6,110.3 651.0,110.4 654.3,110.4 657.6,110.4 661.0,110.5 664.4,110.5 667.7,110.5 671.0,110.6 674.4,110.6 677.8,110.6 681.1,110.6 684.5,110.7 687.8,110.7 691.1,110.7 694.5,110.7 697.8,110.7 701.2,110.7 704.6,110.8 707.9,110.8 711.3,110.8 714.6,110.8 717.9,110.8 721.3,110.8 724.7,110.8 728.0,110.9 731.4,110.9 734.7,110.9 738.0,110.9 741.4,110.9 744.8,110.9 748.1,110.9 751.5,110.9 754.8,110.9 758.1,110.9 761.5,110.9 764.9,110.9 768.2,110.9 771.5,110.9 774.9,110.9 778.3,110.9 781.6,110.9 785.0,110.9 788.3,110.9 791.6,110.9 795.0,110.9 798.3,110.9 801.7,110.9 805.1,110.9 808.4,110.9 811.8,110.9 815.1,110.9 818.4,110.8 821.8,110.8 825.2,110.8 828.5,110.8 831.9,110.8 835.2,110.8 838.5,110.8 841.9,110.8 845.3,110.8 848.6,110.7 852.0,110.7 855.3,110.7 858.6,110.7 862.0,110.7"></polyline>
+  <text x="58" y="18" class="legend-cp">Cp</text>
+  <text x="862" y="18" text-anchor="end" class="legend-ce">Ce</text>
+  <text x="460" y="358" text-anchor="middle">Zeit [min]</text>
+ </svg></div>
+<table id="profileTable"><thead><tr><th>Zeit [min]</th><th>Cp [ng/ml]</th><th>Ce [ng/ml]</th></tr></thead><tbody><tr><td>0</td><td>0,00</td><td>0,00</td></tr><tr><td>1</td><td>111,55</td><td>0,99</td></tr><tr><td>2</td><td>38,59</td><td>1,98</td></tr><tr><td>5</td><td>7,53</td><td>2,57</td></tr><tr><td>10</td><td>5,57</td><td>2,83</td></tr><tr><td>15</td><td>4,75</td><td>3,00</td></tr><tr><td>20</td><td>4,17</td><td>3,10</td></tr><tr><td>30</td><td>3,45</td><td>3,20</td></tr><tr><td>45</td><td>2,98</td><td>3,19</td></tr><tr><td>60</td><td>2,82</td><td>3,13</td></tr><tr><td>90</td><td>2,76</td><td>3,00</td></tr><tr><td>120</td><td>2,77</td><td>2,91</td></tr><tr><td>180</td><td>2,82</td><td>2,85</td></tr><tr><td>240</td><td>2,86</td><td>2,84</td></tr></tbody></table>
+
+<h2>OP-Matrix</h2>
+<div class="small no-print">Format in den Zellen: <strong>Bolus ml / Perfusor ml/h</strong>. Matrix nutzt die aktuell gewählte Ziel-Ce und Perfusorkonzentration.</div>
+<div id="matrix"><table><thead><tr><th>KG \ Alter</th><th>40 J</th><th>45 J</th><th>50 J</th><th>55 J</th><th>60 J</th><th>65 J</th><th>70 J</th><th>75 J</th><th>80 J</th><th>85 J</th><th>90 J</th></tr></thead><tbody><tr><th>50 kg</th><td>13 / 4,6</td><td>12 / 4,3</td><td>12 / 4,1</td><td>12 / 3,8</td><td>12 / 3,6</td><td>11 / 3,3</td><td>11 / 3,1</td><td>11 / 2,9</td><td>10 / 2,6</td><td>10 / 2,4</td><td>10 / 2,1</td></tr><tr><th>55 kg</th><td>14 / 5,0</td><td>14 / 4,7</td><td>13 / 4,5</td><td>13 / 4,2</td><td>13 / 3,9</td><td>12 / 3,7</td><td>12 / 3,4</td><td>12 / 3,1</td><td>11 / 2,9</td><td>11 / 2,6</td><td>11 / 2,3</td></tr><tr><th>60 kg</th><td>15 / 5,5</td><td>15 / 5,2</td><td>15 / 4,9</td><td>14 / 4,6</td><td>14 / 4,3</td><td>14 / 4,0</td><td>13 / 3,7</td><td>13 / 3,4</td><td>12 / 3,1</td><td>12 / 2,8</td><td>12 / 2,6</td></tr><tr><th>65 kg</th><td>17 / 5,9</td><td>16 / 5,6</td><td>16 / 5,3</td><td>15 / 5,0</td><td>15 / 4,7</td><td>15 / 4,3</td><td>14 / 4,0</td><td>14 / 3,7</td><td>13 / 3,4</td><td>13 / 3,1</td><td>13 / 2,8</td></tr><tr><th>70 kg</th><td>18 / 6,4</td><td>17 / 6,0</td><td>17 / 5,7</td><td>17 / 5,4</td><td>16 / 5,0</td><td>16 / 4,7</td><td>15 / 4,3</td><td>15 / 4,0</td><td>14 / 3,7</td><td>14 / 3,3</td><td>14 / 3,0</td></tr><tr><th>75 kg</th><td>19 / 6,8</td><td>19 / 6,5</td><td>18 / 6,1</td><td>18 / 5,7</td><td>17 / 5,4</td><td>17 / 5,0</td><td>16 / 4,7</td><td>16 / 4,3</td><td>16 / 3,9</td><td>15 / 3,6</td><td>15 / 3,2</td></tr><tr><th>80 kg</th><td>20 / 7,3</td><td>20 / 6,9</td><td>19 / 6,5</td><td>19 / 6,1</td><td>18 / 5,7</td><td>18 / 5,4</td><td>18 / 5,0</td><td>17 / 4,6</td><td>17 / 4,2</td><td>16 / 3,8</td><td>16 / 3,4</td></tr><tr><th>85 kg</th><td>22 / 7,8</td><td>21 / 7,3</td><td>21 / 6,9</td><td>20 / 6,5</td><td>20 / 6,1</td><td>19 / 5,7</td><td>19 / 5,3</td><td>18 / 4,9</td><td>18 / 4,4</td><td>17 / 4,0</td><td>17 / 3,6</td></tr><tr><th>90 kg</th><td>23 / 8,2</td><td>22 / 7,8</td><td>22 / 7,3</td><td>21 / 6,9</td><td>21 / 6,5</td><td>20 / 6,0</td><td>20 / 5,6</td><td>19 / 5,1</td><td>19 / 4,7</td><td>18 / 4,3</td><td>18 / 3,8</td></tr><tr><th>95 kg</th><td>24 / 8,7</td><td>24 / 8,2</td><td>23 / 7,7</td><td>23 / 7,3</td><td>22 / 6,8</td><td>21 / 6,4</td><td>21 / 5,9</td><td>20 / 5,4</td><td>20 / 5,0</td><td>19 / 4,5</td><td>19 / 4,0</td></tr><tr><th>100 kg</th><td>26 / 9,1</td><td>25 / 8,6</td><td>24 / 8,1</td><td>24 / 7,7</td><td>23 / 7,2</td><td>23 / 6,7</td><td>22 / 6,2</td><td>21 / 5,7</td><td>21 / 5,2</td><td>20 / 4,7</td><td>19 / 4,3</td></tr><tr><th>105 kg</th><td>27 / 9,6</td><td>26 / 9,1</td><td>26 / 8,6</td><td>25 / 8,0</td><td>24 / 7,5</td><td>24 / 7,0</td><td>23 / 6,5</td><td>22 / 6,0</td><td>22 / 5,5</td><td>21 / 5,0</td><td>20 / 4,5</td></tr><tr><th>110 kg</th><td>28 / 10,0</td><td>27 / 9,5</td><td>27 / 9,0</td><td>26 / 8,4</td><td>25 / 7,9</td><td>25 / 7,4</td><td>24 / 6,8</td><td>23 / 6,3</td><td>23 / 5,7</td><td>22 / 5,2</td><td>21 / 4,7</td></tr><tr><th>115 kg</th><td>29 / 10,5</td><td>29 / 9,9</td><td>28 / 9,4</td><td>27 / 8,8</td><td>27 / 8,3</td><td>26 / 7,7</td><td>25 / 7,1</td><td>25 / 6,6</td><td>24 / 6,0</td><td>23 / 5,5</td><td>22 / 4,9</td></tr><tr><th>120 kg</th><td>31 / 10,9</td><td>30 / 10,4</td><td>29 / 9,8</td><td>28 / 9,2</td><td>28 / 8,6</td><td>27 / 8,0</td><td>26 / 7,4</td><td>26 / 6,9</td><td>25 / 6,3</td><td>24 / 5,7</td><td>23 / 5,1</td></tr></tbody></table></div>
+
+<h2 class="model">Modellannahmen und Referenzen</h2>
+<p class="small">
+Drei-Kompartiment-Modell nach Jeleazcov et al.; Kovariaten Alter und Körpergewicht.
+CL1 = 1,01 × (BW/70) × (1 − 0,015 × (Alter − 67)) L/min;
+V1 = 3,35 × (BW/70) × (1 − 0,028 × (Alter − 67)) L;
+CL2 = 1,47 × (BW/70) L/min; V2 = 13,9 × (BW/70) L;
+CL3 = 1,41 × (BW/70) L/min; V3 = 145 × (BW/70) L.
+Effect-site-Verzögerung: ke0 = 0,015 min⁻¹.
+</p>
+<p class="small">
+Jeleazcov, C. et al. Population Pharmacokinetic Modeling of Hydromorphone in Cardiac Surgery Patients during Postoperative Pain Therapy. Anesthesiology 120, 378–391 (2014).<br>
+Jeleazcov, C. et al. Patient-controlled Analgesia with Target-controlled Infusion of Hydromorphone in Postoperative Pain Therapy. Anesthesiology 124, 56–68 (2016).<br>
+Ihmsen, H., Rohde, D., Schüttler, J. &amp; Jeleazcov, C. External Validation of a Recently Developed Population Pharmacokinetic Model for Hydromorphone During Postoperative Pain Therapy. Eur. J. Drug Metab. Pharmacokinet. 42, 17–28 (2017).<br>
+Wehrfritz, A. et al. Postoperative pain therapy with hydromorphone; comparison of patient-controlled analgesia with target-controlled infusion and standard patient-controlled analgesia: A randomised controlled trial. Eur J Anaesth 37, 1168–1175 (2020).
+</p>
+</main>
+
+<script>
+const BOLUS_DURATION_MIN=1.0, TARGET_TIME_MIN=15.0;
+function params(weight,age){
+ const bw=weight/70.0;
+ const cl1=1.01*bw*(1+(-0.015)*(age-67));
+ const v1=3.35*bw*(1+(-0.028)*(age-67));
+ const cl2=1.47*bw, v2=13.9*bw, cl3=1.41*bw, v3=145.0*bw;
+ if(cl1<=0||v1<=0) throw new Error("Alter/Gewicht außerhalb des plausiblen Modellbereichs: CL1 oder V1 <= 0.");
+ return {cl1,v1,cl2,v2,cl3,v3,ke0:0.015};
+}
+function deriv(state,input,p){
+ const [a1,a2,a3,ce]=state;
+ const cp=a1/p.v1, c2=a2/p.v2, c3=a3/p.v3, cp_ngml=cp*1000.0;
+ return [
+  input-p.cl1*cp-p.cl2*cp+p.cl2*c2-p.cl3*cp+p.cl3*c3,
+  p.cl2*cp-p.cl2*c2,
+  p.cl3*cp-p.cl3*c3,
+  p.ke0*(cp_ngml-ce)
+ ];
+}
+function rk4Step(state,input,p,dt){
+ const k1=deriv(state,input,p);
+ const s2=state.map((x,i)=>x+0.5*dt*k1[i]); const k2=deriv(s2,input,p);
+ const s3=state.map((x,i)=>x+0.5*dt*k2[i]); const k3=deriv(s3,input,p);
+ const s4=state.map((x,i)=>x+dt*k3[i]); const k4=deriv(s4,input,p);
+ return state.map((x,i)=>x+dt*(k1[i]+2*k2[i]+2*k3[i]+k4[i])/6.0);
+}
+function simulate(weight,age,bolusMg,maintMgMin,totalMin=240,dt=0.01){
+ const p=params(weight,age); let state=[0,0,0,0]; const out=[];
+ for(let t=0;t<=totalMin+1e-9;t+=dt){
+  if(Math.abs(t-Math.round(t))<dt/2){out.push({t:Math.round(t),cp:(state[0]/p.v1)*1000.0,ce:state[3]});}
+  const bolusRate=(t<BOLUS_DURATION_MIN)?bolusMg/BOLUS_DURATION_MIN:0;
+  state=rk4Step(state,bolusRate+maintMgMin,p,dt);
+ }
+ return out;
+}
+function ceAt15(weight,age,bolusMg,maintMgMin){
+ const prof=simulate(weight,age,bolusMg,maintMgMin,TARGET_TIME_MIN,0.005);
+ return prof[prof.length-1].ce;
+}
+function calculateValues(weight,age,target,conc){
+ const p=params(weight,age);
+ const targetMgL=target/1000.0;
+ const maintMgMin=p.cl1*targetMgL;
+ let lo=0,hi=20;
+ while(ceAt15(weight,age,hi,maintMgMin)<target && hi<200) hi*=2;
+ for(let i=0;i<55;i++){const mid=(lo+hi)/2; if(ceAt15(weight,age,mid,maintMgMin)<target) lo=mid; else hi=mid;}
+ const bolusMg=(lo+hi)/2;
+ const profile=simulate(weight,age,bolusMg,maintMgMin,240,0.01);
+ const get=t=>profile.find(r=>r.t===t)||profile[profile.length-1];
+ return {p,bolusMg,bolusMl:bolusMg/conc,maintMgH:maintMgMin*60,rateMlH:(maintMgMin*60)/conc,profile};
+}
+function num(id){return parseFloat(document.getElementById(id).value)}
+function fmt(x,d=1){return x.toFixed(d).replace('.',',')}
+function svgNum(x,d=1){return x.toFixed(d).replace('.',',')}
+function drawProfileChart(profile){
+ const width=920, height=360, ml=58, mr=58, mt=28, mb=46;
+ const plotW=width-ml-mr, plotH=height-mt-mb;
+ const cpMax=Math.max(...profile.map(r=>r.cp),1);
+ const ceMax=Math.max(...profile.map(r=>r.ce),1);
+ const cpScaleMax=Math.ceil(cpMax/10)*10;
+ const ceScaleMax=Math.ceil(ceMax);
+ const x=t=>ml+(t/240)*plotW;
+ const yCp=v=>mt+plotH-(v/cpScaleMax)*plotH;
+ const yCe=v=>mt+plotH-(v/ceScaleMax)*plotH;
+ const points=(data,yFn)=>data.map(r=>`${x(r.t).toFixed(1)},${yFn(r).toFixed(1)}`).join(' ');
+ const cpPoints=points(profile,r=>yCp(r.cp));
+ const cePoints=points(profile,r=>yCe(r.ce));
+ const xTicks=[0,30,60,90,120,180,240];
+ const yTicks=[0,0.25,0.5,0.75,1];
+ const grid=yTicks.map(f=>{
+  const yy=mt+plotH-f*plotH;
+  const cpVal=cpScaleMax*f, ceVal=ceScaleMax*f;
+  return `<line class="gridline" x1="${ml}" y1="${yy}" x2="${width-mr}" y2="${yy}"></line>
+  <text class="axis-cp" x="${ml-8}" y="${yy+4}" text-anchor="end">${svgNum(cpVal, cpScaleMax>=100?0:1)}</text>
+  <text class="axis-ce" x="${width-mr+8}" y="${yy+4}" text-anchor="start">${svgNum(ceVal,1)}</text>`;
+ }).join('');
+ const xAxis=xTicks.map(t=>`<line class="gridline" x1="${x(t)}" y1="${mt}" x2="${x(t)}" y2="${mt+plotH}"></line><text x="${x(t)}" y="${height-18}" text-anchor="middle">${t}</text>`).join('');
+ document.getElementById('profileChart').innerHTML=`<svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Konzentrationsverlauf von Cp und Ce">
+  <rect x="0" y="0" width="${width}" height="${height}" fill="#fff"></rect>
+  ${grid}${xAxis}
+  <line class="axis" x1="${ml}" y1="${mt}" x2="${ml}" y2="${mt+plotH}"></line>
+  <line class="axis" x1="${width-mr}" y1="${mt}" x2="${width-mr}" y2="${mt+plotH}"></line>
+  <line class="axis" x1="${ml}" y1="${mt+plotH}" x2="${width-mr}" y2="${mt+plotH}"></line>
+  <polyline class="cp-line" points="${cpPoints}"></polyline>
+  <polyline class="ce-line" points="${cePoints}"></polyline>
+  <text x="${ml}" y="18" class="legend-cp">Cp</text>
+  <text x="${width-mr}" y="18" text-anchor="end" class="legend-ce">Ce</text>
+  <text x="${width/2}" y="${height-2}" text-anchor="middle">Zeit [min]</text>
+ </svg>`;
+}
+function calculate(){
+ try{
+  const weight=num('weight'), age=num('age'), target=num('target'), conc=num('concentration');
+  const v=calculateValues(weight,age,target,conc);
+  document.getElementById('bolusMl').textContent=fmt(v.bolusMl,1)+" ml";
+  document.getElementById('bolusMg').textContent=fmt(v.bolusMg,3)+" mg Hydromorphon";
+  document.getElementById('rateMlH').textContent=fmt(v.rateMlH,1)+" ml/h";
+  document.getElementById('rateMgH').textContent=fmt(v.maintMgH,3)+" mg/h";
+  const p=v.p;
+  document.querySelector('#paramTable tbody').innerHTML=[
+   ["CL1",`${fmt(p.cl1,3)} (${fmt(p.cl1*60,2)} L/h)`,"L/min","1,01 × (BW/70) × (1 − 0,015 × (Alter − 67))"],
+   ["CL2",`${fmt(p.cl2,3)} (${fmt(p.cl2*60,2)} L/h)`,"L/min","1,47 × (BW/70)"],
+   ["CL3",`${fmt(p.cl3,3)} (${fmt(p.cl3*60,2)} L/h)`,"L/min","1,41 × (BW/70)"],
+   ["V1",fmt(p.v1,2),"L","3,35 × (BW/70) × (1 − 0,028 × (Alter − 67))"],
+   ["V2",fmt(p.v2,2),"L","13,9 × (BW/70)"],
+   ["V3",fmt(p.v3,1),"L","145 × (BW/70)"],
+   ["ke0",fmt(p.ke0,3),"min⁻¹","0,015"]
+  ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td style="text-align:left">${r[3]}</td></tr>`).join('');
+  const times=[0,1,2,5,10,15,20,30,45,60,90,120,180,240];
+  const rows=times.map(t=>v.profile.find(r=>r.t===t)).filter(Boolean);
+  document.querySelector('#profileTable tbody').innerHTML=rows.map(r=>`<tr><td>${r.t}</td><td>${fmt(r.cp,2)}</td><td>${fmt(r.ce,2)}</td></tr>`).join('');
+  drawProfileChart(v.profile);
+  makeMatrix();
+ }catch(e){alert(e.message)}
+}
+function makeMatrix(){
+ try{
+  const target=num('target'), conc=num('concentration');
+  const ages=[]; for(let a=40;a<=90;a+=5) ages.push(a);
+  const weights=[]; for(let w=50;w<=120;w+=5) weights.push(w);
+  let html='<table><thead><tr><th>KG \\ Alter</th>'+ages.map(a=>`<th>${a} J</th>`).join('')+'</tr></thead><tbody>';
+  for(const w of weights){html+=`<tr><th>${w} kg</th>`; for(const a of ages){const v=calculateValues(w,a,target,conc); html+=`<td>${v.bolusMl.toFixed(0)} / ${fmt(v.rateMlH,1)}</td>`;} html+='</tr>';}
+  html+='</tbody></table>'; document.getElementById('matrix').innerHTML=html;
+ }catch(e){alert(e.message)}
+}
+calculate();
+</script>
+
+
+</body></html>
